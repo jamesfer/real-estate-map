@@ -1,0 +1,9 @@
+{
+  "presets": ["babel-preset-env"],
+  "plugins": [[
+    "transform-incremental-dom", {
+      "uuidPrefix": "pm-",
+      "moduleSource": "incremental-dom"
+    }
+  ]]
+}
