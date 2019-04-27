@@ -3,9 +3,9 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  entry: path.resolve('src', 'optimized-visualization-2', 'initMap.ts'),
+  entry: path.resolve('src', 'attempt-3', 'index.ts'),
   output: {
-    path: path.resolve('src', 'optimized-visualization-2', 'dist'),
+    path: path.resolve('src', 'attempt-3', 'dist'),
     filename: 'bundle.js',
   },
   devtool: 'source-map',
@@ -20,14 +20,15 @@ module.exports = {
       {
         test: /\.tsx?/,
         include: [
-          path.resolve('src', 'optimized-visualization-2'),
+          path.resolve('src', 'attempt-3'),
+          path.resolve('src', 'real-estate-api'),
         ],
         use: [
           'babel-loader',
           {
             loader: 'ts-loader',
             options: {
-              configFile: 'tsconfig.build.json',
+              configFile: 'tsconfig.json',
             },
           },
         ]

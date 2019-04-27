@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "dev": "webpack-dev-server --hot"
   },
   "jest": {
     "preset": "ts-jest"
@@ -15,13 +16,13 @@
     "@types/lodash": "^4.14.119",
     "@types/mz": "^0.0.32",
     "@types/node-fetch": "^2.1.4",
-    "jest": "^23.6.0",
+    "jest": "^24.7.1",
     "lodash": "^4.17.11",
     "mz": "^2.7.0",
     "node-fetch": "^2.3.0",
     "p-map": "^2.0.0",
     "rxjs": "^6.3.3",
-    "ts-jest": "^23.10.5",
+    "ts-jest": "^24.0.2",
     "ts-node": "^7.0.1",
     "tslib": "^1.9.3",
     "tslint": "^5.12.0",

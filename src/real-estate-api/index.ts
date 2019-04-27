@@ -52,7 +52,7 @@ export interface Feature {
 export interface ApiResult {
   prettyUrl: string,
   resolvedQuery: object,
-  _links: object,
+  _links: { [k: string]: any },
   totalResultsCount: number,
   tieredResults: {
     tier: number,
@@ -156,7 +156,13 @@ function normalizeOptions(options: ApiOptions): Dictionary<any> {
   }
 
   if (options.bedroomsRange) {
-    query.filters.bedroomsRange = options.bedroomsRange;
+    query.filters.bedroomsRange = {};
+    if (options.bedroomsRange.minimum !== undefined) {
+      query.filters.bedroomsRange.minimum = `${options.bedroomsRange.minimum}`;
+    }
+    if (options.bedroomsRange.minimum !== undefined) {
+      query.filters.bedroomsRange.maximum = `${options.bedroomsRange.maximum}`;
+    }
   }
 
   if (options.minimumBathrooms) {
@@ -172,7 +178,7 @@ function normalizeOptions(options: ApiOptions): Dictionary<any> {
 
 export async function loadProperties(options: ApiOptions): Promise<ApiResult> {
   const query = normalizeOptions(options);
-  const url = `${apiSearchUrl}?query=${encodeURIComponent(JSON.stringify(query))}`;
+  const url = `${apiSearchUrl}?query=${JSON.stringify(query)}`;
   const result = await fetch(url);
 
   if (result.status < 200 || result.status >= 300) {

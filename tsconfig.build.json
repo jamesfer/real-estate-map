@@ -1,6 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "include": [
-    "src/optimized-visualization-2"
-  ]
-}
