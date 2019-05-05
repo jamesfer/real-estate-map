@@ -1,7 +1,6 @@
 import { mean } from 'lodash';
 import {
   combineLatest,
-  ConnectableObservable,
   from,
   MonoTypeOperatorFunction,
   Observable,
@@ -12,26 +11,31 @@ import {
 } from 'rxjs';
 import {
   auditTime,
-  debounceTime,
   distinctUntilChanged, filter,
   map,
   mergeAll,
   mergeMap,
   publish, startWith,
-  takeUntil, tap,
+  takeUntil,
 } from 'rxjs/operators';
-import { Bounds } from '../optimized-visualization-2/utils';
 import { toObservable } from './asynchronous';
 import { CoordinateArea } from './models/coordinates';
 import { Point, pointsEqual } from './models/point';
 import { generateTileHash, Tile, tilesEqual } from './models/tile';
 import {
   calculateVisibleTiles,
-  degreesToPixels, tilesToDegrees, tileToArea,
+  degreesToPixels, tileToArea,
   tileToLocalPixels,
   worldPixelsToLocalPixels,
 } from './visible-tiles';
 import { Renderer } from './renderer';
+
+interface Bounds {
+  north: number,
+  south: number,
+  east: number,
+  west: number,
+}
 
 interface Layer {
   zoom: number;

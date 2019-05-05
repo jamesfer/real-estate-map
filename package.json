@@ -5,43 +5,39 @@
   "license": "MIT",
   "scripts": {
     "test": "jest",
-    "dev": "webpack-dev-server"
+    "dev": "webpack-dev-server",
+    "build": "webpack"
+  },
+  "babel": {
+    "presets": "babel-preset-env"
   },
   "jest": {
-    "preset": "ts-jest"
+    "preset": "ts-jest",
+    "setupFiles": [
+      "./src/test-setup.ts"
+    ]
   },
-  "dependencies": {
+  "devDependencies": {
     "@types/googlemaps": "^3.30.16",
     "@types/jest": "^23.3.10",
     "@types/lodash": "^4.14.119",
-    "@types/mz": "^0.0.32",
-    "@types/node-fetch": "^2.1.4",
-    "jest": "^24.7.1",
-    "lodash": "^4.17.11",
-    "mz": "^2.7.0",
-    "node-fetch": "^2.3.0",
-    "p-map": "^2.0.0",
-    "rxjs": "^6.3.3",
-    "ts-jest": "^24.0.2",
-    "ts-node": "^7.0.1",
-    "tslib": "^1.9.3",
-    "tslint": "^5.12.0",
-    "tslint-config-airbnb": "^5.11.1",
-    "typescript": "^3.2.2"
-  },
-  "devDependencies": {
-    "@types/incremental-dom": "^0.5.0",
-    "@types/react": "^16.7.18",
     "babel-core": "^6.26.3",
     "babel-loader": "^7",
-    "babel-plugin-transform-incremental-dom": "^4.2.1",
     "babel-preset-env": "^1.7.0",
+    "cross-fetch": "^3.0.2",
     "css-loader": "^2.1.0",
     "html-webpack-plugin": "^3.2.0",
     "html-webpack-template": "^6.2.0",
-    "incremental-dom": "^0.6.0",
+    "jest": "^24.7.1",
+    "lodash": "^4.17.11",
+    "rxjs": "^6.3.3",
     "style-loader": "^0.23.1",
+    "ts-jest": "^24.0.2",
     "ts-loader": "^5.3.3",
+    "tslib": "^1.9.3",
+    "tslint": "^5.12.0",
+    "tslint-config-airbnb": "^5.11.1",
+    "typescript": "^3.2.2",
     "webpack": "^4.28.4",
     "webpack-cli": "^3.2.1",
     "webpack-dev-server": "^3.1.14",

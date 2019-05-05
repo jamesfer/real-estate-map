@@ -1,11 +1,12 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlWebpackTemplate = require('html-webpack-template');
 
 module.exports = {
   mode: 'development',
   entry: path.resolve('src', 'attempt-3', 'index.ts'),
   output: {
-    path: path.resolve('src', 'attempt-3', 'dist'),
+    path: path.resolve('dist'),
     filename: 'bundle.js',
   },
   devtool: 'source-map',
@@ -15,21 +16,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.worker\.tsx?/,
-        include: [
-          path.resolve('src', 'attempt-3'),
-          path.resolve('src', 'real-estate-api'),
-        ],
-        use: [
-          'file-loader',
-        ]
-      },
-      {
         test: /\.tsx?/,
-        include: [
-          path.resolve('src', 'attempt-3'),
-          path.resolve('src', 'real-estate-api'),
-        ],
         use: [
           'babel-loader',
           {
@@ -52,7 +39,8 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       inject: false,
-      template: require('html-webpack-template'),
+      template: HtmlWebpackTemplate,
+      title: 'Property map',
       appMountId: 'map',
       scripts: [
         'https://maps.googleapis.com/maps/api/js?key=AIzaSyC3pGR5GoIrUAALkjshqD6JoWgmatm7wm8',

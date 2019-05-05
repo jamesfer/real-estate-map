@@ -1,6 +1,4 @@
-import { flatMap, map, filter } from 'lodash';
-import fetch from 'node-fetch';
-import { Dictionary } from '../utilityTypes';
+import { flatMap, map, filter, Dictionary } from 'lodash';
 
 const apiSearchUrl = 'https://services.realestate.com.au/services/listings/search';
 
