@@ -12,11 +12,18 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.json', '.jsx', '.css']
   },
-  devServer: {
-    hot: true,
-  },
   module: {
     rules: [
+      {
+        test: /\.worker\.tsx?/,
+        include: [
+          path.resolve('src', 'attempt-3'),
+          path.resolve('src', 'real-estate-api'),
+        ],
+        use: [
+          'file-loader',
+        ]
+      },
       {
         test: /\.tsx?/,
         include: [

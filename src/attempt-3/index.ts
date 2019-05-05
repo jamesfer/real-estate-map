@@ -12,10 +12,10 @@ const GAUSSIAN_RADIUS = 50;
 const PROPERTY_BLOCK_ZOOM_LEVEL = 12;
 
 const initialSearchSettings: ApiOptions = {
-  channel: Channel.rent,
-  propertyTypes: [PropertyType.unitApartment],
-  bedroomsRange: { minimum: 2, maximum: 3 },
-  minimumBathrooms: 2,
+  channel: Channel.buy,
+  // propertyTypes: [PropertyType.unitApartment],
+  // bedroomsRange: { minimum: 2, maximum: 3 },
+  // minimumBathrooms: 2,
 };
 
 google.maps.event.addDomListener(window, 'load', async function () {

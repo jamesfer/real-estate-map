@@ -1,25 +1,18 @@
-import { BehaviorSubject, from, Observable, Subject, merge, ConnectableObservable, of } from 'rxjs';
-import { AnonymousSubject, fromPromise } from 'rxjs/internal-compatibility';
+import { BehaviorSubject, ConnectableObservable, merge, Observable, of, Subject } from 'rxjs';
+import { fromPromise } from 'rxjs/internal-compatibility';
+import { finalize, map, mergeMap, publishReplay, reduce, tap } from 'rxjs/operators';
 import {
   ApiOptions,
   extractPropertyInformation,
   loadProperties,
   PropertyInformation,
+  SortType,
 } from '../real-estate-api';
 import { CoordinateArea } from './models/coordinates';
 import { generateTileHash, Tile } from './models/tile';
-import {
-  finalize,
-  map,
-  switchMap,
-  tap,
-  filter,
-  publishReplay,
-  reduce, catchError, mergeMap,
-} from 'rxjs/operators';
-import { ObservablePool, runWithPool, mergeMapPool } from './observable-pool';
+import { mergeMapPool, ObservablePool } from './observable-pool';
 import { calculateVisibleTiles, coordinateIsInsideArea, tileToArea } from './visible-tiles';
-
+import { sortBy } from 'lodash';
 
 function runConcurrently<T>(
   concurrency: number,
@@ -52,33 +45,6 @@ function runConcurrently<T>(
 }
 
 const propertyRequestPool = new ObservablePool(5);
-
-/**
- * Loads the data from the server inside a given area.
- */
-// function requestDataFor(
-//   area: CoordinateArea,
-//   searchSettings: ApiOptions,
-// ): Observable<PropertyInformation> {
-//   return runConcurrently(3, (stop, index) => (
-//     fromPromise(loadProperties({
-//       ...searchSettings,
-//       boundingBox: [area.southEast.latitude, area.northWest.longitude, area.northWest.latitude, area.southEast.longitude], // [-37.886822810951536,145.00084641600324,-37.84772660035494,145.05946877623273],
-//       page: index,
-//       pageSize: 200,
-//     })).pipe(
-//       tap(({ _links }) => {
-//         if (!_links || !_links.next || !_links.next.href) {
-//           stop();
-//         }
-//       }),
-//       map(extractPropertyInformation),
-//       switchMap(properties => from(properties)),
-//       // Filter out properties that have a non-numeric price
-//       filter(({ price }) => typeof price === 'number' && !Number.isNaN(price)),
-//     )
-//   ));
-// }
 
 /**
  * Loads the data from the server inside a given area.
@@ -117,16 +83,28 @@ function requestDataWithPool(
 export class PropertyLoader {
   private propertyCache: { [k: string]: Observable<PropertyInformation[]> } = { };
 
+  private propertyRangeCache: Promise<{ min: number, max: number } | undefined> | undefined;
+
   constructor(
     private tileSize: number,
     private propertyBlockZoomLevel: number,
     private searchSettings: ApiOptions,
   ) { }
 
+  async fetchPropertyRange(): Promise<{ min: number, max: number } | undefined> {
+    if (!this.propertyRangeCache) {
+      this.propertyRangeCache = Promise.all([this.fetchMin(), this.fetchMax()])
+        .then(([min, max]) => (
+          min && max ? (console.log(min.price, max.price), { min: min.price, max: max.price }) : undefined
+        ));
+    }
+    return this.propertyRangeCache;
+  }
+
   fetchPropertiesInArea(area: CoordinateArea): Observable<PropertyInformation[]> {
     const tiles = calculateVisibleTiles(this.tileSize, this.propertyBlockZoomLevel, area);
     return merge(
-      ...tiles.map(tile => this.fetchPropertiesInTile(tile)/*.pipe(finalize(() => console.log('Finalize fetch in area for tile', generateTileHash(tile))))*/),
+      ...tiles.map(tile => this.fetchPropertiesInTile(tile)),
     ).pipe(
       // We need to filter the results again because the cached blocks may not exactly line up with
       // the area
@@ -150,5 +128,52 @@ export class PropertyLoader {
 
   setSearchSettings(searchSettings: ApiOptions) {
     this.searchSettings = searchSettings;
+  }
+
+  private async fetchMax() {
+    const count = 200;
+    const properties = await this.fetchSomeProperties(count, { sortType: SortType.priceDesc });
+    const orderedProperties = sortBy(properties, 'price');
+
+    const q1 = orderedProperties[Math.ceil(count * 0.25)]; // 510,000
+    const q3 = orderedProperties[Math.floor(count * 0.75)]; // 20,000,000
+
+    const max = q3.price + (q3.price - q1.price) * 1.5;
+    return orderedProperties.reverse().find(property => property.price <= max);
+  }
+
+  private async fetchMin() {
+    const count = 200;
+    const properties = await this.fetchSomeProperties(count, { sortType: SortType.priceAsc });
+    const orderedProperties = sortBy(properties, 'price');
+
+    const q1 = orderedProperties[Math.ceil(count * 0.25)]; // 20,000
+    const q3 = orderedProperties[Math.floor(count * 0.75)]; // 135,000
+
+    const min = q1.price - (q3.price - q1.price) * 1.5;
+    return properties.find(property => property.price >= min);
+  }
+
+  private async fetchSomeProperties(
+    count: number,
+    additionSettings: Partial<ApiOptions> = {},
+  ): Promise<PropertyInformation[]> {
+    const properties: PropertyInformation[] = [];
+    while (properties.length < count) {
+      const result = await loadProperties({
+        ...this.searchSettings,
+        ...additionSettings,
+        pageSize: count,
+        page: 1,
+      });
+
+      const propertiesPage = extractPropertyInformation(result);
+      properties.push(...propertiesPage);
+
+      if (!result._links.next.href) {
+        break;
+      }
+    }
+    return properties.slice(0, count);
   }
 }

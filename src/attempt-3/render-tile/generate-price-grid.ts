@@ -177,7 +177,7 @@ function applyGaussianWeights(tileSize: number, aggregateMap: PixelGrid<number>,
 //   );
 // }
 
-function computePriceGridForProperties(
+export function computePriceGridForProperties(
   tileSize: number,
   tile: Tile,
   properties: PropertyInformation[],
@@ -200,18 +200,30 @@ function computePriceGridForProperties(
   // return applyGaussianWeights(tileSize, aggregatedGrid, gaussianWeights);
 }
 
-export function generatePriceGrid(
+export function loadProperties(
   tileSize: number,
   radius: number,
-  gaussianWeights: GaussianWeight[],
   propertyLoader: PropertyLoader,
   tile: Tile,
-): Observable<PixelGrid<{ value: number, weight: number }>> {
+): Observable<PropertyInformation[]> {
   // Expand the tile area so that we include properties near the edge in calculations
   const expandedArea = expandArea(tileSize, tile.zoom, tileToArea(tileSize, tile), radius);
 
   // Fetch all properties in the tile's area
-  return propertyLoader.fetchPropertiesInArea(expandedArea).pipe(
-    mergeMap((properties) => computePriceGridForProperties(tileSize, tile, properties, gaussianWeights)),
-  );
+  return propertyLoader.fetchPropertiesInArea(expandedArea);
 }
+
+// export function generatePriceGrid(
+//   tileSize: number,
+//   gaussianWeights: GaussianWeight[],
+//   properties: PropertyInformation,
+//   tile: Tile,
+// ): Observable<PixelGrid<{ value: number, weight: number }>> {
+//   // Expand the tile area so that we include properties near the edge in calculations
+//   const expandedArea = expandArea(tileSize, tile.zoom, tileToArea(tileSize, tile), radius);
+//
+//   // Fetch all properties in the tile's area
+//   return propertyLoader.fetchPropertiesInArea(expandedArea).pipe(
+//     mergeMap((properties) => computePriceGridForProperties(tileSize, tile, properties, gaussianWeights)),
+//   );
+// }

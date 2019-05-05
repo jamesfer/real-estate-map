@@ -1,4 +1,4 @@
-import { flatMap, map } from 'lodash';
+import { flatMap, map, filter } from 'lodash';
 import fetch from 'node-fetch';
 import { Dictionary } from '../utilityTypes';
 
@@ -19,11 +19,17 @@ export enum Channel {
   buy = 'buy',
 }
 
+export enum SortType {
+  priceAsc = 'price-asc',
+  priceDesc = 'price-desc',
+}
+
 export interface ApiOptions {
   channel: Channel,
   page?: number,
   pageSize?: number,
   suburb?: string,
+  sortType?: SortType,
   boundingBox?: [number, number, number, number],
   propertyTypes?: PropertyType[],
   priceRange?: {
@@ -43,10 +49,76 @@ export interface Price {
   value?: number,
 }
 
-export interface Feature {
+export interface FeatureDetail {
   label: string,
   type: 'bedrooms' | 'bathrooms' | 'parkingSpaces',
   value: number,
+}
+
+export interface Features<T> {
+  bedrooms?: T;
+  bathrooms?: T;
+  carSpaces?: T;
+}
+
+export interface PropertyResult {
+  prettyUrl: string,
+  standard: boolean,
+  midtier: boolean,
+  lister: object,
+  featured: boolean,
+  _links: object,
+  signature: boolean,
+  channel: Channel,
+  description: string,
+  advertising: object,
+  showAgencyLogo: boolean,
+  title: string,
+  listers: object[],
+  features?: {
+    general?: Features<number>;
+  };
+  price?: Price,
+  priceRange?: string,
+  propertyType: PropertyType,
+  nextInspectionTime: object,
+  productDepth: string,
+  calculator: object,
+  images: object[],
+  address: {
+    streetAddress: string,
+    locality: string,
+    postcode: string,
+    suburb: string,
+    location: {
+      latitude: number,
+      longitude: number,
+    },
+    subdivisionCode: string,
+    state: string,
+    showAddress: boolean,
+  },
+  classicProject: boolean,
+  agency: object,
+  isSoldChannel: false,
+  isBuyChannel: false,
+  agencyListingId: string,
+  signatureProject: boolean,
+  propertyFeatures: {
+    features: string[],
+    section: string,
+    label: string,
+  }[],
+  listingId: string,
+  bond: Price,
+  mainImage: object,
+  dateAvailable: object,
+  modifiedDate: object,
+  inspectionsAndAuctions: object[],
+  isRentChannel: boolean,
+  generalFeatures: Features<FeatureDetail>;
+  applyOnline: true,
+  status: object,
 }
 
 export interface ApiResult {
@@ -57,72 +129,7 @@ export interface ApiResult {
   tieredResults: {
     tier: number,
     count: number,
-    results: {
-      prettyUrl: string,
-      standard: boolean,
-      midtier: boolean,
-      lister: object,
-      featured: boolean,
-      _links: object,
-      signature: boolean,
-      channel: Channel,
-      description: string,
-      advertising: object,
-      showAgencyLogo: boolean,
-      title: string,
-      listers: object[],
-      features: {
-        general: {
-          bedrooms: number,
-          bathrooms: number,
-          parkingSpaces: number,
-        }
-      }
-      price: Price,
-      propertyType: PropertyType,
-      nextInspectionTime: object,
-      productDepth: string,
-      calculator: object,
-      images: object[],
-      address: {
-        streetAddress: string,
-        locality: string,
-        postcode: string,
-        suburb: string,
-        location: {
-          latitude: number,
-          longitude: number,
-        },
-        subdivisionCode: string,
-        state: string,
-        showAddress: boolean,
-      },
-      classicProject: boolean,
-      agency: object,
-      isSoldChannel: false,
-      isBuyChannel: false,
-      agencyListingId: string,
-      signatureProject: boolean,
-      propertyFeatures: {
-        features: string[],
-        section: string,
-        label: string,
-      }[],
-      listingId: string,
-      bond: Price,
-      mainImage: object,
-      dateAvailable: object,
-      modifiedDate: object,
-      inspectionsAndAuctions: object[],
-      isRentChannel: boolean,
-      generalFeatures: {
-        bedrooms: Feature,
-        bathrooms: Feature,
-        parkingSpaces: Feature,
-      },
-      applyOnline: true,
-      status: object,
-    }[],
+    results: PropertyResult[],
   }[],
 }
 
@@ -138,6 +145,14 @@ function normalizeOptions(options: ApiOptions): Dictionary<any> {
       excludeAddressHidden: 'true',
     },
   };
+
+  if (options.channel) {
+    query.channel = options.channel;
+  }
+
+  if (options.sortType) {
+    query.sortType = options.sortType;
+  }
 
   if (options.suburb) {
     query.localities = [{ searchLocation: options.suburb }];
@@ -188,43 +203,114 @@ export async function loadProperties(options: ApiOptions): Promise<ApiResult> {
   return result.json();
 }
 
-function convertPriceToNumber(price: Price): number {
-  if (price.value) {
-    return price.value;
-  }
-  const matches = price.display.match(/([0-9]+)/);
+function parsePrice(string: string): number | null {
+  // Matches numbers with comma separators and attempts to match numbers with . separators
+  const matches = string.match(/\$(([0-9]+,[0-9,]+)|([0-9]+(\.[0-9]{3,})*)[km]?)/i);
   if (matches) {
-    const [, priceValue] = matches;
-    return +priceValue;
+    const [, price] = matches;
+    let priceValue = +price.replace(/[., ]/g, '');
+
+    if (price.endsWith('k') || price.endsWith('K')) {
+      priceValue *= 1e3;
+    }
+
+    if (price.endsWith('m') || price.endsWith('M')) {
+      priceValue *= 1e6;
+    }
+
+    if (!Number.isNaN(priceValue)) {
+      return priceValue;
+    }
   }
-  return NaN;
+  return null;
+}
+
+function parsePriceRange(string: string): number | null {
+  const matches = string.match(/(\$[0-9,.k]+\s*-\s*\$[0-9,.k]+)/i);
+  if (matches) {
+    const [, priceRange] = matches;
+    const [minPrice, maxPrice] = priceRange.split('-');
+    const minPriceValue = parsePrice(minPrice);
+    const maxPriceValue = parsePrice(maxPrice);
+    if (minPriceValue !== null && maxPriceValue !== null) {
+      return (minPriceValue + maxPriceValue) / 2;
+    }
+  }
+  return null;
+}
+
+function parsePriceOrRange(string: string): number | null {
+  const priceRangeValue = parsePriceRange(string);
+  if (priceRangeValue !== null) {
+    return priceRangeValue;
+  }
+
+  const priceValue = parsePrice(string);
+  if (priceValue !== null) {
+    return priceValue;
+  }
+
+  return null;
+}
+
+function extractPrice(result: PropertyResult): number | null {
+  if (result.price) {
+    if (result.price.value) {
+      return result.price.value;
+    }
+
+    if (result.price.display) {
+      const price = parsePriceOrRange(result.price.display);
+      if (price !== null) {
+        return price;
+      }
+    }
+  }
+
+  if (result.priceRange) {
+    return parsePriceOrRange(result.priceRange);
+  }
+
+  return null;
 }
 
 export interface PropertyInformation {
+  id: string,
   price: number,
   latitude: number,
   longitude: number,
-  bedrooms: number,
-  bathrooms: number,
-  carSpaces: number,
+  bedrooms?: number,
+  bathrooms?: number,
+  carSpaces?: number,
   propertyType: PropertyType,
   channel: Channel,
 }
 
 export function extractPropertyInformation(result: ApiResult): PropertyInformation[] {
   return flatMap(result.tieredResults, tier => (
-    map(tier.results, result => {
-      return {
-        price: convertPriceToNumber(result.price),
-        latitude: result.address.location.latitude,
-        longitude: result.address.location.longitude,
-        bedrooms: result.features.general.bedrooms,
-        bathrooms: result.features.general.bathrooms,
-        carSpaces: result.features.general.parkingSpaces,
-        propertyType: result.propertyType,
-        channel: result.channel,
-      };
-    })
+    filter(
+      map(tier.results, (result) => {
+        const price = extractPrice(result);
+        if (!price) {
+          return null;
+        }
+
+        const features: Features<number> = result.features && result.features.general
+          ? result.features.general
+          : {};
+
+        return {
+          price,
+          ...features,
+          id: result.listingId,
+          latitude: result.address.location.latitude,
+          longitude: result.address.location.longitude,
+          propertyType: result.propertyType,
+          channel: result.channel,
+        };
+      }),
+      result => result !== null,
+    ) as PropertyInformation[]
   ));
 }
 

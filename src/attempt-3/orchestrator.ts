@@ -436,15 +436,12 @@ export class BaseOrchestrator implements Orchestrator {
   private publishNow<T>(id?: string): MonoTypeOperatorFunction<T> {
     return (observable) => {
       const connectable = publish<T>()(observable.pipe(
-        tap(() => id && console.log('before', id)),
         takeUntil(this.unsubscribed$),
       ));
 
       // This subscription will be cleaned up when the original observable completes
       connectable.connect();
-      return connectable.pipe(
-        tap(() => id && console.log('after', id)),
-      );
+      return connectable;
     };
   }
 
