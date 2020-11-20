@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./build/api"
+  },
+  "include": [
+    "src/heatmap-generator",
+    "src/shared"
+  ],
+  "exclude": [
+    "**/*.spec.ts"
+  ]
+}

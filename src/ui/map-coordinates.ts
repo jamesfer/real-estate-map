@@ -1,5 +1,5 @@
 import { Observable, Operator, Subject } from 'rxjs';
-import { CoordinateArea } from './models/coordinates';
+import { CoordinateArea } from '../shared/models/coordinates';
 
 export interface MapPosition {
   area: CoordinateArea,

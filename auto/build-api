@@ -1,0 +1,29 @@
+#!/bin/bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+# Remove existing build dir
+if [ -d build/api ]; then
+  rm -r build/api
+fi
+mkdir -p build/api
+
+# Build project
+echo "Building project"
+yarn tsc --project tsconfig.api.json
+
+# Copy package.json file into bundle
+cp package.json build/api
+
+# Generate index file
+echo "module.exports.handler = require('./heatmap-generator/index.js').handler;" > build/api/index.js
+
+# Calculating bundle hash
+echo "Calculating bundle hash"
+find build/api -type f -exec md5sum {} + | md5sum | awk '{print $1}' > build/api/hash.txt
+echo "Bundle hash: $(cat build/api/hash.txt)"
+
+# Zip api bundle
+echo "Zipping bundle"
+(cd build/api && zip -r "bundle.zip" ./* > /dev/null)

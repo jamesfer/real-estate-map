@@ -4,10 +4,24 @@ const HtmlWebpackTemplate = require('html-webpack-template');
 
 module.exports = {
   mode: 'development',
-  entry: path.resolve('src', 'attempt-3', 'index.ts'),
+  entry: path.resolve('src', 'ui', 'index.ts'),
   output: {
-    path: path.resolve('dist'),
-    filename: 'bundle.js',
+    path: path.resolve('build', 'ui'),
+    filename: '[name].[contenthash].js',
+    publicPath: 'http://jamesfer.me/real-estate-map/',
+  },
+  optimization: {
+    runtimeChunk: 'single',
+    moduleIds: 'deterministic',
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+      },
+    },
   },
   devtool: 'source-map',
   resolve: {
@@ -22,7 +36,7 @@ module.exports = {
           {
             loader: 'ts-loader',
             options: {
-              configFile: 'tsconfig.json',
+              configFile: 'tsconfig.ui.json',
             },
           },
         ]
@@ -38,7 +52,7 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      inject: false,
+      inject: true,
       template: HtmlWebpackTemplate,
       title: 'Property map',
       appMountId: 'map',

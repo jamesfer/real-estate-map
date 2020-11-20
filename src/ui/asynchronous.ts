@@ -18,4 +18,3 @@ export function toObservable<T>(asynchronous: Asynchronous<T>): Observable<T> {
 
   return of(asynchronous as T);
 }
-

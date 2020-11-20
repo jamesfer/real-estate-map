@@ -1,4 +1,5 @@
-import { Channel, extractPropertyInformation, loadProperties } from './index';
+import { extractPropertyInformation, loadProperties } from './real-estate-api';
+import { Channel } from '../shared/models/api-options';
 
 describe('loadProperties', () => {
   it('should load properties', async () => {
@@ -11,7 +12,7 @@ describe('loadProperties', () => {
 describe('extractPropertyInformation', () => {
   it('should extract the key information about a property', async () => {
     const information = extractPropertyInformation(
-      await loadProperties({ channel: Channel.rent, pageSize: 1 })
+      await loadProperties({ channel: Channel.rent, pageSize: 1 }),
     );
     expect(information).toHaveLength(1);
     information.forEach((property) => {

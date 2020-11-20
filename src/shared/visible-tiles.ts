@@ -92,7 +92,7 @@ export function worldPixelsToLocalPixels(zoom: number, { x, y }: Point): Point {
   return {
     x: x * scale,
     y: y * scale,
-  }
+  };
 }
 
 export function degreesToInnerTileCoordinates(

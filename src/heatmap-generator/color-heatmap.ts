@@ -1,5 +1,5 @@
 import { clamp } from 'lodash';
-import { PixelGrid } from './generate-price-grid';
+import { PixelGrid } from './compute-price-grid';
 
 // function weightedLimits(map) {
 //   let minValue = Infinity;
@@ -45,13 +45,13 @@ function easeInOutQuad(t: number) {
   return t < 0.5 ? 2 * t ** 2 : -1 + (4 - 2 * t) * t;
 }
 
-function easeInOutQuart(t: number) {
-  return t<.5 ? 8*t*t*t*t : 1-8*(--t)*t*t*t;
-}
-
-function easeOutQuint(t: number) {
-  return t<.5 ? 16*t*t*t*t*t : 1+16*(--t)*t*t*t*t;
-}
+// function easeInOutQuart(t: number) {
+//   return t<.5 ? 8*t*t*t*t : 1-8*(--t)*t*t*t;
+// }
+//
+// function easeOutQuint(t: number) {
+//   return t<.5 ? 16*t*t*t*t*t : 1+16*(--t)*t*t*t*t;
+// }
 
 function interpolate(
   min: number,
@@ -109,7 +109,7 @@ function alphaGradient(min: number, max: number, weight: number) {
   return Math.round(interpolate(min, max, weight, 0, 255 * 0.6, easeOutOct));
 }
 
-export function drawImageData(
+export default function colorHeatmap(
   tileSize: number,
   minPrice: number,
   maxPrice: number,
@@ -119,15 +119,15 @@ export function drawImageData(
   const maxWeight = 10;
 
   // Iterate through every pixel
-  for (let x = 0; x < tileSize; x++) {
+  for (let x = 0; x < tileSize; x += 1) {
     if (priceMap[x]) {
-      for (let y = 0; y < tileSize; y++) {
+      for (let y = 0; y < tileSize; y += 1) {
         if (priceMap[x][y] && priceMap[x][y].value > 0) {
           const color: number[] = colorGradient(minPrice, maxPrice, priceMap[x][y].value);
           const alpha = alphaGradient(0, maxWeight, priceMap[x][y].weight);
 
           // Write the color to the image data
-          for (let i = 0; i < 3; i++) {
+          for (let i = 0; i < 3; i += 1) {
             data[y * tileSize * 4 + x * 4 + i] = color[i];
           }
           data[y * tileSize * 4 + x * 4 + 3] = alpha;

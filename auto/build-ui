@@ -1,0 +1,13 @@
+#!/bin/bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+# Remove existing build dir
+if [ -d build/ui ]; then
+  rm -r build/ui
+fi
+mkdir -p build/ui
+
+# Copile code
+yarn webpack --mode production

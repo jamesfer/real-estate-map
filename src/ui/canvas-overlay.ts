@@ -1,65 +1,6 @@
-import { mean } from 'lodash';
-import {
-  BehaviorSubject,
-  ConnectableObservable,
-  from,
-  MonoTypeOperatorFunction,
-  Observable,
-  of,
-  Subject,
-  Subscription,
-} from 'rxjs';
-import { fromPromise } from 'rxjs/internal-compatibility';
-import {
-  distinctUntilChanged,
-  map,
-  mergeAll,
-  mergeMap,
-  publish,
-  takeUntil,
-  tap,
-  withLatestFrom,
-} from 'rxjs/operators';
-import { Asynchronous } from './asynchronous';
-import { CoordinateArea } from './models/coordinates';
-import { Point, pointsEqual } from './models/point';
-import { generateTileHash, Tile, tilesEqual } from './models/tile';
 import { Orchestrator } from './orchestrator';
-import {
-  calculateVisibleTiles,
-  degreesToPixels,
-  tileToLocalPixels,
-  worldPixelsToLocalPixels,
-} from './visible-tiles';
 
 // TODO convert all visible tiles functions to use bounds instead of coordinate area
-
-
-interface Bounds {
-  north: number;
-  east: number;
-  south: number;
-  west: number;
-}
-
-interface RenderedTile {
-  tile: Tile;
-  canvas: HTMLCanvasElement;
-  image: Uint8ClampedArray;
-}
-
-/**
- * Multicasts an observable and connects it immediately. Only use this operation on observables that
- * will complete, otherwise you will leak the subscription.
- */
-function publishNow<T>(): MonoTypeOperatorFunction<T> {
-  return (observable) => {
-    const connectable = observable.pipe(publish()) as ConnectableObservable<T>;
-    // This subscription will be cleaned up when the original observable completes
-    connectable.connect();
-    return connectable;
-  };
-}
 
 export class CanvasOverlay extends google.maps.OverlayView {
   /**
@@ -93,7 +34,7 @@ export class CanvasOverlay extends google.maps.OverlayView {
       wrapper: this.wrapper,
     });
 
-    this.getMap().addListener('zoom', (e) => console.log('event', e));
+    this.getMap().addListener('zoom', (e: any) => console.log('event', e));
   }
 
   /**
@@ -102,9 +43,6 @@ export class CanvasOverlay extends google.maps.OverlayView {
   draw() {
     // TODO might need to forward these calls to the orchestrator in case there is a way to move the
     //      map without triggering the drag/zoom handlers.
-    // console.log('draw called');
-    // this.bounds$.next(this.getMapBounds());
-    // this.zoom$.next(this.getMapZoom());
   }
 
   /**

@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+# Rebuilding source
+auto/build-api
+auto/build-ui
+
+terraform apply \
+  -auto-approve \
+  -var "api_bundle_hash=$(cat build/api/hash.txt)"

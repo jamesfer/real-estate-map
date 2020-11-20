@@ -19,22 +19,23 @@ import {
   takeUntil,
 } from 'rxjs/operators';
 import { toObservable } from './asynchronous';
-import { CoordinateArea } from './models/coordinates';
-import { Point, pointsEqual } from './models/point';
-import { generateTileHash, Tile, tilesEqual } from './models/tile';
+import { CoordinateArea } from '../shared/models/coordinates';
+import { Point, pointsEqual } from '../shared/models/point';
+import { generateTileHash, Tile, tilesEqual } from '../shared/models/tile';
 import {
   calculateVisibleTiles,
   degreesToPixels, tileToArea,
   tileToLocalPixels,
   worldPixelsToLocalPixels,
-} from './visible-tiles';
+} from '../shared/visible-tiles';
 import { Renderer } from './renderer';
+import MapHandlerMap = google.maps.MapHandlerMap;
 
 interface Bounds {
-  north: number,
-  south: number,
-  east: number,
-  west: number,
+  north: number;
+  south: number;
+  east: number;
+  west: number;
 }
 
 interface Layer {
@@ -63,26 +64,9 @@ export interface OrchestratorOptions {
   renderer: Renderer;
 }
 
-type MapEvent =
-  | 'bounds_changed'
-  | 'center_changed'
-  | 'click'
-  | 'dblclick'
-  | 'drag'
-  | 'dragend'
-  | 'dragstart'
-  | 'heading_changed'
-  | 'idle'
-  | 'maptypeid_changed'
-  | 'mousemove'
-  | 'mouseout'
-  | 'mouseover'
-  | 'projection_changed'
-  | 'resize'
-  | 'rightclick'
-  | 'tilesloaded'
-  | 'tilt_changed'
-  | 'zoom_changed'
+type MapEventFirstParameter<N extends keyof MapHandlerMap<any>> = (
+  MapHandlerMap<any>[N] extends (arg: infer T) => any ? T : void
+);
 
 export class BaseOrchestrator implements Orchestrator {
   private readonly tileSize: number;
@@ -141,16 +125,16 @@ export class BaseOrchestrator implements Orchestrator {
     );
 
     // Debounced map position
-    const mapPosition$ = combineLatest(
+    const mapPosition$ = combineLatest([
       zoom$.pipe(distinctUntilChanged()),
       bounds$.pipe(distinctUntilChanged()),
-    ).pipe(
+    ]).pipe(
       // TODO Debounce better. Needs to emit every X seconds with the latest value.
       auditTime(16),
       this.publishNow(),
     );
 
-    // Tile coordinates that need to be rendered const visibleTiles$ = mapPosition$.pipe(
+    // Tile coordinates that need to be rendered
     const visibleTiles$ = mapPosition$.pipe(
       map(([zoom, bounds]) => this.getVisibleTiles(zoom, bounds)),
       this.publishNow(),
@@ -158,7 +142,7 @@ export class BaseOrchestrator implements Orchestrator {
 
     // Tiles that will need to be added to the view
     const unrenderedTiles$: Observable<Tile[]> = visibleTiles$.pipe(
-      map(visibleTiles => visibleTiles.filter((tile) => (
+      map(visibleTiles => visibleTiles.filter(tile => (
         this.canvases.every(({ tile: existingTile }) => !tilesEqual(existingTile, tile))
       ))),
       this.publishNow(),
@@ -171,7 +155,7 @@ export class BaseOrchestrator implements Orchestrator {
         // Convert the array of tiles into an observable of tiles
         mergeMap(unrenderedTiles => from(unrenderedTiles).pipe(
           // Map each unrendered tile to an observable with the rendering result
-          map((visibleTile) => toObservable(this.renderer.renderTile(visibleTile)).pipe(
+          map(visibleTile => toObservable(this.renderer.renderTile(visibleTile)).pipe(
             map(image => ({ image, tile: visibleTile })),
             // Take each rendered observable until the tile is no longer in vision
             takeUntil(visibleTiles$.pipe(
@@ -196,10 +180,10 @@ export class BaseOrchestrator implements Orchestrator {
     ).subscribe((renderedTile) => {
       // TODO don't return unneeded variables
       // Find a layer for it
-      const layer = this.findOrCreateLayer(renderedTile.tile.zoom);
+      this.findOrCreateLayer(renderedTile.tile.zoom);
 
       // Create a canvas element
-      const canvas = this.createAndRenderCanvas(renderedTile);
+      this.createAndRenderCanvas(renderedTile);
     });
 
     // Removes tiles that are out of vision
@@ -233,10 +217,17 @@ export class BaseOrchestrator implements Orchestrator {
         }
 
         // Find the tiles in the current zoom level required to cover this canvas
-        const coveringTiles = calculateVisibleTiles(this.tileSize, zoom, tileToArea(this.tileSize, canvas.tile));
+        const coveringTiles = calculateVisibleTiles(
+          this.tileSize,
+          zoom,
+          tileToArea(this.tileSize, canvas.tile),
+        );
 
         // Check if some of the covering tiles have not been rendered
-        if (coveringTiles.some(coveringTile => !this.canvases.some(canvas => tilesEqual(coveringTile, canvas.tile)))) {
+        const stillVisible = coveringTiles.some(coveringTile => (
+          !this.canvases.some(canvas => tilesEqual(coveringTile, canvas.tile))
+        ));
+        if (stillVisible) {
           return true;
         }
 
@@ -255,7 +246,6 @@ export class BaseOrchestrator implements Orchestrator {
       removeCoveredTileSubscription.unsubscribe();
     });
   }
-
 
   /**
    * Returns a list of tiles that are visible within the given bounds.
@@ -321,7 +311,7 @@ export class BaseOrchestrator implements Orchestrator {
       southEast: centerPoint,
     });
     return centerTile.point;
-  };
+  }
 
   private calculateLayerOffset(zoom: number, tilePoint: Point) {
     const bounds = this.getMapBounds();
@@ -334,13 +324,16 @@ export class BaseOrchestrator implements Orchestrator {
     // Local pixel coordinates of the top-left corner of the center tile
     const tilePointPixels = tileToLocalPixels(this.tileSize, tilePoint);
     // Local pixel coordinates of the center of the map
-    const centerPointPixels = worldPixelsToLocalPixels(zoom, degreesToPixels(this.tileSize, centerPoint));
+    const centerPointPixels = worldPixelsToLocalPixels(
+      zoom,
+      degreesToPixels(this.tileSize, centerPoint),
+    );
 
     return {
       x: tilePointPixels.x - centerPointPixels.x,
       y: tilePointPixels.y - centerPointPixels.y,
     };
-  };
+  }
 
   private updateLayerPosition(layer: Layer): boolean {
     const position = this.calculateLayerPosition(layer.zoom);
@@ -375,14 +368,14 @@ export class BaseOrchestrator implements Orchestrator {
   private findCanvas(tile: Tile) {
     const canvas = this.canvases.find(canvas => tilesEqual(tile, canvas.tile));
     return canvas ? canvas.element : undefined;
-  };
+  }
 
   private calculateTilePosition(tile: Tile, layerPosition: Point) {
     return {
       x: (tile.point.x - layerPosition.x) * this.tileSize,
       y: (tile.point.y - layerPosition.y) * this.tileSize,
     };
-  };
+  }
 
   private updateTilePosition(tile: Tile, layerPosition: Point, element: HTMLElement) {
     const position = this.calculateTilePosition(tile, layerPosition);
@@ -400,11 +393,11 @@ export class BaseOrchestrator implements Orchestrator {
     layer.element.appendChild(element);
     this.canvases.push({ tile, element });
     return element;
-  };
+  }
 
   private findOrCreateCanvas(tile: Tile) {
     return this.findCanvas(tile) || this.createCanvas(tile);
-  };
+  }
 
   private renderImageToCanvas(image: Uint8ClampedArray, canvas: HTMLCanvasElement) {
     // Render the image onto the canvas
@@ -417,7 +410,7 @@ export class BaseOrchestrator implements Orchestrator {
     const imageData = context.createImageData(this.tileSize, this.tileSize);
     imageData.data.set(image);
     context.putImageData(imageData, 0, 0);
-  };
+  }
 
   private createAndRenderCanvas(renderedTile: { image: Uint8ClampedArray, tile: Tile; }) {
     const canvas = this.findOrCreateCanvas(renderedTile.tile);
@@ -449,9 +442,11 @@ export class BaseOrchestrator implements Orchestrator {
     };
   }
 
-  private observeEvent<T = unknown>(event: MapEvent): Observable<T> {
-    return Observable.create((subscriber: Subscriber<T>): TeardownLogic => {
-      const listener = this.getPlainMap().addListener(event, (e) => subscriber.next(e));
+  private observeEvent<N extends keyof MapHandlerMap<any>>(
+    event: N,
+  ): Observable<MapEventFirstParameter<N>> {
+    return new Observable((subscriber: Subscriber<MapEventFirstParameter<N>>): TeardownLogic => {
+      const listener = this.getPlainMap().addListener(event, e => subscriber.next(e));
       return () => listener.remove();
     });
   }

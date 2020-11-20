@@ -1,56 +1,17 @@
 import { flatMap, map, filter, Dictionary } from 'lodash';
+import { ApiOptions, Channel, PropertyType } from '../shared/models/api-options';
 
 const apiSearchUrl = 'https://services.realestate.com.au/services/listings/search';
 
-export enum PropertyType {
-  townhouse = 'townhouse',
-  unitApartment = 'unit+apartment',
-  house = 'house',
-  retirement = 'retire',
-  blockOfUnits = 'unitblock',
-  acreage = 'acreage',
-  villa = 'villa',
-}
-
-export enum Channel {
-  rent = 'rent',
-  buy = 'buy',
-}
-
-export enum SortType {
-  priceAsc = 'price-asc',
-  priceDesc = 'price-desc',
-}
-
-export interface ApiOptions {
-  channel: Channel,
-  page?: number,
-  pageSize?: number,
-  suburb?: string,
-  sortType?: SortType,
-  boundingBox?: [number, number, number, number],
-  propertyTypes?: PropertyType[],
-  priceRange?: {
-    minimum?: number,
-    maximum?: number,
-  },
-  bedroomsRange?: {
-    minimum?: number,
-    maximum?: number,
-  },
-  minimumBathrooms?: number,
-  minimumCars?: number,
-}
-
 export interface Price {
-  display: string,
-  value?: number,
+  display: string;
+  value?: number;
 }
 
 export interface FeatureDetail {
-  label: string,
-  type: 'bedrooms' | 'bathrooms' | 'parkingSpaces',
-  value: number,
+  label: string;
+  type: 'bedrooms' | 'bathrooms' | 'parkingSpaces';
+  value: number;
 }
 
 export interface Features<T> {
@@ -60,75 +21,75 @@ export interface Features<T> {
 }
 
 export interface PropertyResult {
-  prettyUrl: string,
-  standard: boolean,
-  midtier: boolean,
-  lister: object,
-  featured: boolean,
-  _links: object,
-  signature: boolean,
-  channel: Channel,
-  description: string,
-  advertising: object,
-  showAgencyLogo: boolean,
-  title: string,
-  listers: object[],
+  prettyUrl: string;
+  standard: boolean;
+  midtier: boolean;
+  lister: object;
+  featured: boolean;
+  _links: object;
+  signature: boolean;
+  channel: Channel;
+  description: string;
+  advertising: object;
+  showAgencyLogo: boolean;
+  title: string;
+  listers: object[];
   features?: {
     general?: Features<number>;
   };
-  price?: Price,
-  priceRange?: string,
-  propertyType: PropertyType,
-  nextInspectionTime: object,
-  productDepth: string,
-  calculator: object,
-  images: object[],
+  price?: Price;
+  priceRange?: string;
+  propertyType: PropertyType;
+  nextInspectionTime: object;
+  productDepth: string;
+  calculator: object;
+  images: object[];
   address: {
-    streetAddress: string,
-    locality: string,
-    postcode: string,
-    suburb: string,
+    streetAddress: string;
+    locality: string;
+    postcode: string;
+    suburb: string;
     location: {
-      latitude: number,
-      longitude: number,
-    },
-    subdivisionCode: string,
-    state: string,
-    showAddress: boolean,
-  },
-  classicProject: boolean,
-  agency: object,
-  isSoldChannel: false,
-  isBuyChannel: false,
-  agencyListingId: string,
-  signatureProject: boolean,
+      latitude: number;
+      longitude: number;
+    };
+    subdivisionCode: string;
+    state: string;
+    showAddress: boolean;
+  };
+  classicProject: boolean;
+  agency: object;
+  isSoldChannel: false;
+  isBuyChannel: false;
+  agencyListingId: string;
+  signatureProject: boolean;
   propertyFeatures: {
-    features: string[],
-    section: string,
-    label: string,
-  }[],
-  listingId: string,
-  bond: Price,
-  mainImage: object,
-  dateAvailable: object,
-  modifiedDate: object,
-  inspectionsAndAuctions: object[],
-  isRentChannel: boolean,
+    features: string[];
+    section: string;
+    label: string;
+  }[];
+  listingId: string;
+  bond: Price;
+  mainImage: object;
+  dateAvailable: object;
+  modifiedDate: object;
+  inspectionsAndAuctions: object[];
+  isRentChannel: boolean;
   generalFeatures: Features<FeatureDetail>;
-  applyOnline: true,
-  status: object,
+  applyOnline: true;
+  status: object;
 }
 
 export interface ApiResult {
-  prettyUrl: string,
-  resolvedQuery: object,
-  _links: { [k: string]: any },
-  totalResultsCount: number,
+  prettyUrl: string;
+  resolvedQuery: object;
+  _links: { [k: string]: any };
+  totalResultsCount: number;
   tieredResults: {
-    tier: number,
-    count: number,
-    results: PropertyResult[],
-  }[],
+    tier: number;
+    count: number;
+    results: PropertyResult[];
+  }[];
 }
 
 function normalizeOptions(options: ApiOptions): Dictionary<any> {
@@ -273,15 +234,15 @@ function extractPrice(result: PropertyResult): number | null {
 }
 
 export interface PropertyInformation {
-  id: string,
-  price: number,
-  latitude: number,
-  longitude: number,
-  bedrooms?: number,
-  bathrooms?: number,
-  carSpaces?: number,
-  propertyType: PropertyType,
-  channel: Channel,
+  id: string;
+  price: number;
+  latitude: number;
+  longitude: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  carSpaces?: number;
+  propertyType: PropertyType;
+  channel: Channel;
 }
 
 export function extractPropertyInformation(result: ApiResult): PropertyInformation[] {
@@ -311,7 +272,3 @@ export function extractPropertyInformation(result: ApiResult): PropertyInformati
     ) as PropertyInformation[]
   ));
 }
-
-
-
-

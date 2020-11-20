@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "outDir": "./build",
     "esModuleInterop": true,
     "importHelpers": true,
     "jsx": "preserve",
@@ -7,11 +8,13 @@
       "es2018",
       "dom"
     ],
-    "module": "es2015",
+    "module": "commonjs",
+    "target": "es2016",
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "sourceMap": true,
-    "strict": true
+    "strict": true,
+    "skipLibCheck": true
   },
   "include": [
     "src"
