@@ -8,7 +8,6 @@ module.exports = {
   output: {
     path: path.resolve('build', 'ui'),
     filename: '[name].[contenthash].js',
-    publicPath: 'http://jamesfer.me/real-estate-map/',
   },
   optimization: {
     runtimeChunk: 'single',
