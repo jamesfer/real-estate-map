@@ -7,6 +7,7 @@ cd "$(dirname "$0")/.."
 auto/build-api
 auto/build-ui
 
+terraform init
 terraform apply \
   -auto-approve \
   -var "api_bundle_hash=$(cat build/api/hash.txt)"
