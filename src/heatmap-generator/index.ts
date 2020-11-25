@@ -27,11 +27,36 @@ function extractRequestParameters(req: Request): RequestParameters {
     radius,
     tile,
     tileSize,
-  } = req.params;
+  } = req.query;
 
   if (!searchOptions || !radius || !tile || !tileSize) {
-    console.log('Missing query parameters', JSON.stringify(req.params, undefined, 2));
-    throw new ApiError(`Missing query parameters ${JSON.stringify(req.params, undefined, 2)}`, 400);
+    const message = `Missing query parameters ${JSON.stringify(req.query, undefined, 2)}`;
+    console.error(message);
+    throw new ApiError(message, 400);
+  }
+
+  if (typeof searchOptions !== 'string') {
+    const message = `searchOptions query parameter should be a string. Got: ${JSON.stringify(searchOptions, undefined, 2)}`;
+    console.error(message);
+    throw new ApiError(message, 400);
+  }
+
+  if (typeof tile !== 'string') {
+    const message = `tile query parameter should be a string. Got: ${JSON.stringify(tile, undefined, 2)}`;
+    console.error(message);
+    throw new ApiError(message, 400);
+  }
+
+  if (typeof radius !== 'string') {
+    const message = `radius query parameter should be a string. Got: ${JSON.stringify(radius, undefined, 2)}`;
+    console.error(message);
+    throw new ApiError(message, 400);
+  }
+
+  if (typeof tileSize !== 'string') {
+    const message = `tileSize query parameter should be a string. Got: ${JSON.stringify(tileSize, undefined, 2)}`;
+    console.error(message);
+    throw new ApiError(message, 400);
   }
 
   const options = {
