@@ -60,6 +60,9 @@ function generateFileHash(timestamp: number, params: RequestParameters): string 
 }
 
 export async function handler(req: Request, res: Response) {
+  res.header('Content-Type', 'application/json');
+  res.header('Access-Control-Allow-Origin', 'https://jamesfer.me');
+
   try {
     const params = extractRequestParameters(req);
     const timestamp = getTimestamp();
@@ -67,7 +70,6 @@ export async function handler(req: Request, res: Response) {
     console.log('Request: ', JSON.stringify({ params, timestamp, fileHash }, undefined, 2));
 
     res.header('Cache-Control', `max-age=${ONE_WEEK / 1000}`);
-    res.header('Content-Type', 'application/json');
 
     // Check if the file already exists
     const bucket = storage.bucket('');
