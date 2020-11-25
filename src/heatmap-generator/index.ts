@@ -119,6 +119,7 @@ export async function handler(req: Request, res: Response) {
     await file.save(JSON.stringify(heatmapArray), { resumable: false });
     console.log('Uploaded new heatmap');
   } catch (error) {
+    console.log('Error', error.message);
     res.status(error instanceof ApiError ? error.code : 500).json({ message: error.message }).end();
   }
 }
