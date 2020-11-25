@@ -89,6 +89,12 @@ export async function handler(req: Request, res: Response) {
   res.header('Access-Control-Allow-Origin', 'https://jamesfer.me');
 
   try {
+    const heatmapBucket = process.env.HEATMAP_BUCKET;
+    if (!heatmapBucket) {
+      console.error('Missing HEATMAP_BUCKET environment variable');
+      throw new ApiError('Missing HEATMAP_BUCKET environment variable', 500);
+    }
+
     const params = extractRequestParameters(req);
     const timestamp = getTimestamp();
     const fileHash = generateFileHash(timestamp, params);
@@ -97,7 +103,7 @@ export async function handler(req: Request, res: Response) {
     res.header('Cache-Control', `max-age=${ONE_WEEK / 1000}`);
 
     // Check if the file already exists
-    const bucket = storage.bucket('');
+    const bucket = storage.bucket(heatmapBucket);
     const file = bucket.file(fileHash);
     if (await file.exists()) {
       console.log('Found existing file');
