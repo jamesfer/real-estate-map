@@ -4,6 +4,7 @@ const HtmlWebpackTemplate = require('html-webpack-template');
 
 module.exports = {
   mode: 'development',
+  target: 'web',
   entry: path.resolve('src', 'ui', 'index.ts'),
   output: {
     path: path.resolve('build', 'ui'),

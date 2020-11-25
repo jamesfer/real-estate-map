@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "./build/ui"
+    "outDir": "./build/ui",
+    "module": "es2015"
   },
   "include": [
     "src/ui",
