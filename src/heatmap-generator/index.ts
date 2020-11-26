@@ -113,7 +113,12 @@ export async function handler(req: Request, res: Response) {
       return;
     }
 
-    const heatmap = await createHeatmap(0, 0, params.tile, params.searchOptions);
+    const heatmap = await createHeatmap(
+      params.radius,
+      params.tileSize,
+      params.tile,
+      params.searchOptions,
+    );
     const heatmapArray = Array.from(heatmap);
     console.log('Generated new heatmap');
     res.json(heatmapArray);
