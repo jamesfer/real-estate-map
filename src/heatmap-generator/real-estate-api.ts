@@ -1,4 +1,6 @@
 import { flatMap, map, filter, Dictionary } from 'lodash';
+// tslint:disable-next-line:import-name
+import fetch from 'cross-fetch';
 import { ApiOptions, Channel, PropertyType } from '../shared/models/api-options';
 
 const apiSearchUrl = 'https://services.realestate.com.au/services/listings/search';

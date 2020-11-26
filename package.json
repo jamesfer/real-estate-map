@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^5.5.0",
+    "cross-fetch": "^3.0.2",
     "lodash": "^4.17.11",
     "rxjs": "^6.3.3",
     "tslib": "^2.0.3"
@@ -44,7 +45,6 @@
     "@types/lodash": "^4.14.165",
     "babel-loader": "^8.2.1",
     "core-js": "^3.7.0",
-    "cross-fetch": "^3.0.2",
     "css-loader": "^5.0.1",
     "html-webpack-plugin": "^4.5.0",
     "html-webpack-template": "^6.2.0",
