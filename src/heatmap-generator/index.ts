@@ -105,7 +105,9 @@ export async function handler(req: Request, res: Response) {
     // Check if the file already exists
     const bucket = storage.bucket(heatmapBucket);
     const file = bucket.file(fileHash);
-    if (await file.exists()) {
+    const fileExistsResponse = await file.exists();
+    console.log('File exists response', JSON.stringify(fileExistsResponse));
+    if (fileExistsResponse && fileExistsResponse.length > 0 && fileExistsResponse[0]) {
       console.log('Found existing file');
       file.createReadStream().pipe(res);
       return;
